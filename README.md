@@ -47,6 +47,10 @@ Todo o texto está no `index.html`, na ordem em que aparece na página, com come
 
 Coloque a nova foto em `img/` com o mesmo nome e tamanho aproximado. Se puder, gere as versões `.webp` (por exemplo em https://squoosh.app) e substitua as duas: `.jpg` e `.webp`.
 
+## Ao mudar o CSS ou o JavaScript
+
+O navegador guarda esses arquivos por alguns minutos. No `index.html`, eles são chamados com `?v=` no final (por exemplo `css/estilo.css?v=20261117b`). Troque esse número a cada mudança, para quem já visitou o site receber a versão nova na hora.
+
 ## Cores e fontes
 
 As cores ficam no começo do `css/estilo.css`, em `:root`. O vermelho da linha e dos botões é `--vermelho`.
