@@ -4,18 +4,20 @@ Site de uma página só, em HTML, CSS e um pouco de JavaScript. Não usa framewo
 
 ## Versões
 
-- `/` — versão atual.
-- `/v2/` — proposta minimalista: uma fonte só (Inter Tight), fundo claro e frio, sem cartões nem botões cheios, navegação com só o nome e "Agendar". O vermelho aparece só na linha, desenhada ao vivo pelo `js/linha-viva.js`, com a ponta à vista e um pingo de tinta. No computador, a espinha é o percurso desenhado à mão da versão atual (com os mesmos lagos), e cada visita ganha pequenos desvios sorteados em volta dele. No celular, a curva é sorteada a cada visita. Em ambos: um só começo e um só fim, ramificações só em lagos, linha atenuada (transparente e mais fina) ao cruzar textos e fotos, traço mais grosso quando a leitura é lenta e um lago a mais quando a pessoa faz uma pausa. Não aparece no Google (`noindex`).
+- `/` — versão principal (minimalista): uma fonte só (Inter Tight), fundo claro e frio, sem cartões nem botões cheios, navegação com só o nome e "Agendar". O vermelho aparece só na linha, desenhada ao vivo pelo `js/linha-viva.js`.
+- `/v1/` — primeira versão (creme, serifa, cartões), guardada para referência. Não aparece no Google.
+- `/v2/` — endereço antigo da versão minimalista; redireciona para `/`.
 
 ## Estrutura
 
 ```
-index.html            todo o conteúdo da página (textos, seções, links)
-css/estilo.css        cores, fontes e layout
-js/linha.js           desenha a linha vermelha e desvia dela em volta dos textos
-dados/rota-linha.json percurso da linha vermelha
-img/                  fotos (em .webp e .jpg), favicon e imagem de compartilhamento (og.jpg)
-fontes/               Fraunces e DM Sans, hospedadas no próprio site (sem Google Fonts)
+index.html             todo o conteúdo da página (textos, seções, links)
+css/estilo.css         cores, fonte e layout
+js/linha-viva.js       desenha a linha vermelha ao vivo (comentado)
+dados/rota-linha.json  percurso desenhado à mão, usado como espinha da linha no computador
+img/                   fotos (em .webp e .jpg), favicon e imagem de compartilhamento (og.jpg)
+fontes/                fontes hospedadas no próprio site (sem Google Fonts)
+v1/                    primeira versão, para referência
 ```
 
 ## Antes de publicar de verdade: trocar os campos entre colchetes
@@ -24,7 +26,8 @@ Procure no `index.html` (Ctrl+F) e substitua:
 
 | Procure | Troque por |
 |---|---|
-| `55XXXXXXXXXXX` | WhatsApp com DDI e DDD, só números. Ex.: `5531999998888` (aparece 4 vezes) |
+| `55XXXXXXXXXXX` | WhatsApp com DDI e DDD, só números. Ex.: `5531999998888` (aparece 3 vezes) |
+| `query=Ouro+Preto%2C+Belo+Horizonte+MG` | o endereço do consultório, para o link "Ver no mapa" |
 | `[NÚMERO]` | número do CRP (aparece 3 vezes) |
 | `[usuario]` | usuário do Instagram |
 | `[Endereço completo]` | endereço do consultório |
@@ -50,7 +53,7 @@ As cores ficam no começo do `css/estilo.css`, em `:root`. O vermelho da linha e
 
 ## Ver no computador
 
-O navegador bloqueia o carregamento da linha quando o arquivo é aberto direto com duplo clique. Para ver com a linha, rode na pasta do site:
+O navegador bloqueia o carregamento do percurso da linha quando o arquivo é aberto direto com duplo clique. Para ver com a linha, rode na pasta do site:
 
 ```
 python3 -m http.server 8000
@@ -78,12 +81,15 @@ Os IPs acima são os indicados pelo GitHub. Confira na documentação do GitHub 
 
 ## A linha vermelha
 
-Tudo fica no `js/linha.js`, comentado.
+Tudo fica no `js/linha-viva.js`, comentado, com os principais ajustes no começo do arquivo (transparência sobre o texto, ritmo da ponta, altura da tela em que ela trabalha).
 
-- **Computador (1000 px ou mais):** segue o percurso desenhado à mão, que fica em `dados/rota-linha.json`. O percurso é preso às seções, então a linha acompanha se uma seção crescer. Os trechos marcados como "fixos" seguem o desenho exatamente. O resto desvia sozinho em volta dos textos.
-- **Celular e tablet:** a linha corre pelas margens e troca de lado nos espaços entre as seções. Numa das travessias ela se abre num "lago". O lado em cada seção fica na constante `LADOS_CELULAR`, e a travessia com lago em `LAGO_NA_TRAVESSIA`.
-- **Animação:** o traço se desenha conforme a rolagem e fica sempre um pouco abaixo do fim da tela, então a linha nunca aparece interrompida no que está visível. O que já foi desenhado não se apaga ao subir. Quem pede ao sistema para reduzir movimento vê a linha pronta.
-- **Se uma seção for adicionada ou removida**, o celular se ajusta sozinho (basta acrescentar o lado em `LADOS_CELULAR`). No computador, o percurso desenhado precisa ser refeito.
+- Um só começo (no topo) e um só fim (saindo pela base). Ela só se ramifica em lagos, que sempre voltam a se juntar.
+- **Computador:** a espinha é o percurso desenhado à mão em `dados/rota-linha.json`, preso às seções da página, com os seus lagos. Cada visita ganha pequenos desvios sorteados em volta dele.
+- **Celular:** a curva é sorteada a cada visita, de preferência pelos espaços vazios.
+- **Desenhada ao vivo:** a ponta aparece na tela, com um pingo de tinta, e avança no ritmo de uma mão. Ler devagar engrossa o traço; uma pausa abre um lago logo adiante.
+- **Sobre textos e fotos** a linha fica quase transparente e mais fina, com transição suave, em vez de desviar.
+- Quem pede ao sistema para reduzir movimento vê a linha pronta.
+- **Se uma seção for adicionada ou removida**, o celular se ajusta sozinho; no computador, o percurso desenhado precisa ser refeito (hoje são 9 blocos: cabeçalho, 7 seções e rodapé).
 
 ## Ética e publicidade (CFP)
 
