@@ -320,14 +320,8 @@ p { margin: 0; }
 .rio path { fill: none; stroke: var(--vermelho); stroke-linecap: round; stroke-linejoin: round; }
 .rio--a { z-index: 1; }
 .rio--b { z-index: 3; opacity: .2; mix-blend-mode: multiply; }
-@media (max-width: 1000px) {
-  .rio--a { opacity: .55; }
+@media (max-width: 999px) {
   .rio--b { opacity: .12; }
 }
-@keyframes rio-revela { from { clip-path: inset(0 0 88% 0); } to { clip-path: inset(0 0 0 0); } }
-@media (prefers-reduced-motion: no-preference) {
-  @supports (animation-timeline: scroll()) {
-    .rio { animation: rio-revela linear both; animation-timeline: scroll(root); }
-  }
-}
+/* A animação (o traço se desenhando com a rolagem) é feita no js/linha.js. */
 @media print { .rio { display: none; } }
