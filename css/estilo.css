@@ -161,9 +161,12 @@ p { margin: 0; }
 
 /* ---------- Hero ---------- */
 
+/* O hero ocupa a primeira tela inteira (descontando o cabeçalho, que tem 81 px) */
+.hero { min-height: calc(100vh - 81px); min-height: calc(100svh - 81px); display: flex; align-items: center; }
 .hero .container {
+  width: 100%;
   display: flex; flex-wrap: wrap; align-items: center; gap: 56px;
-  padding-top: clamp(56px, 8vw, 112px); padding-bottom: clamp(72px, 9vw, 128px);
+  padding-top: clamp(48px, 7vw, 96px); padding-bottom: clamp(56px, 8vw, 112px);
 }
 .hero__texto { flex: 1 1 480px; min-width: 0; display: flex; flex-direction: column; gap: 28px; }
 .hero__olho { margin: 0; font-size: 14px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--tinta-3); }

@@ -19,8 +19,8 @@
  *   volta, e sai pelo canto de baixo. Numa das travessias ela se abre num lago.
  *
  * Animação
- *   Cada trecho do traço é revelado com stroke-dashoffset até a altura da tela
- *   que a pessoa já alcançou, com uma suavização para parecer um traço à mão.
+ *   Cada trecho do traço é revelado com stroke-dashoffset até um pouco abaixo
+ *   do fim da tela que a pessoa já alcançou, com uma suavização para parecer um traço à mão.
  *   O que já foi desenhado continua desenhado ao subir. Quem pede ao sistema
  *   para reduzir movimento vê a linha pronta.
  */
@@ -340,8 +340,9 @@
 
   function atualizarAlvo() {
     if (semMovimento) return;
-    // a ponta do traço acompanha a pessoa, um pouco abaixo do meio da tela
-    var y = window.scrollY + window.innerHeight * 0.82 - topoPagina();
+    // a ponta do traço fica sempre um pouco abaixo do fim da tela,
+    // para a linha nunca parecer interrompida no que está visível
+    var y = window.scrollY + window.innerHeight * 1.15 + 40 - topoPagina();
     // no fim da página, termina o desenho por completo
     if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) y = Infinity;
     if (y > alvo) { alvo = y; animar(); }
@@ -357,7 +358,7 @@
       if (revelado >= altura + 50) revelado = Infinity;
     } else if (falta > 0.5) {
       // aproxima com suavidade, mas sem ficar lento demais em rolagens longas
-      revelado += Math.max(2, Math.min(falta * 0.1, 60));
+      revelado += Math.max(4, Math.min(falta * 0.12, 90));
       if (revelado > alvo) revelado = alvo;
     } else {
       revelado = alvo;

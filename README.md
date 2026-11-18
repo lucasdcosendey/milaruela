@@ -77,7 +77,7 @@ Tudo fica no `js/linha.js`, comentado.
 
 - **Computador (1000 px ou mais):** segue o percurso desenhado à mão, que fica em `dados/rota-linha.json`. O percurso é preso às seções, então a linha acompanha se uma seção crescer. Os trechos marcados como "fixos" seguem o desenho exatamente. O resto desvia sozinho em volta dos textos.
 - **Celular e tablet:** a linha corre pelas margens e troca de lado nos espaços entre as seções. Numa das travessias ela se abre num "lago". O lado em cada seção fica na constante `LADOS_CELULAR`, e a travessia com lago em `LAGO_NA_TRAVESSIA`.
-- **Animação:** o traço se desenha conforme a rolagem e acompanha a pessoa um pouco abaixo do meio da tela. O que já foi desenhado não se apaga ao subir. Quem pede ao sistema para reduzir movimento vê a linha pronta.
+- **Animação:** o traço se desenha conforme a rolagem e fica sempre um pouco abaixo do fim da tela, então a linha nunca aparece interrompida no que está visível. O que já foi desenhado não se apaga ao subir. Quem pede ao sistema para reduzir movimento vê a linha pronta.
 - **Se uma seção for adicionada ou removida**, o celular se ajusta sozinho (basta acrescentar o lado em `LADOS_CELULAR`). No computador, o percurso desenhado precisa ser refeito.
 
 ## Ética e publicidade (CFP)
