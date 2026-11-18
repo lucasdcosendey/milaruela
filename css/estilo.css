@@ -190,7 +190,7 @@ p { margin: 0; }
 .abordagem .container { display: flex; flex-direction: column; gap: 48px; }
 .abordagem__colunas { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 40px; }
 .destaque {
-  flex: 1.6 1 520px; min-width: 0;
+  flex: 0 1 880px; min-width: 0;
   display: flex; flex-direction: column; gap: 24px;
   padding: clamp(28px, 4vw, 40px);
   border-radius: 16px; background: var(--linho); border: 1px solid var(--vermelho);
@@ -214,11 +214,6 @@ p { margin: 0; }
 .lista-traco--compacta li { gap: 12px; }
 .lista-traco--compacta li::before { transform: translateY(-4px); }
 
-.outras { flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 20px; }
-.outras__item { display: flex; flex-direction: column; gap: 8px; padding-top: 20px; border-top: 1px solid var(--fio); }
-.outras__item h3 { font-family: var(--serifa); font-weight: 400; font-size: 22px; }
-.outras__item p { font-size: 16px; color: var(--tinta-2); }
-.outras__nota { padding-top: 20px; border-top: 1px solid var(--fio); font-size: 15px; color: var(--tinta-3); }
 
 /* ---------- Para quem ---------- */
 
