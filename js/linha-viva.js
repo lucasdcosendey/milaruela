@@ -22,6 +22,11 @@
  *  - Uma pausa na leitura faz a linha se abrir num lago logo adiante.
  *  - No computador, os próximos pontos da curva tendem para o lado do mouse.
  *
+ * No computador, a espinha da linha é o percurso desenhado à mão da versão 1
+ * (dados/rota-linha.json, indicado em data-rota no #pagina), com os mesmos
+ * lagos. Cada visita ganha pequenos desvios sorteados em volta dele. No celular,
+ * a curva é sorteada a cada visita.
+ *
  * Quem pede ao sistema para reduzir movimento recebe a linha pronta.
  */
 (function () {
@@ -33,6 +38,15 @@
   var svg = pagina.querySelector('svg.rio');
   if (!svg) return;
   var semMovimento = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var ROTA_URL = pagina.dataset.rota || null;
+  var rota = null, rotaPronta = !ROTA_URL;
+  if (ROTA_URL) {
+    fetch(ROTA_URL)
+      .then(function (r) { if (!r.ok) throw new Error('rota'); return r.json(); })
+      .then(function (d) { rota = d; })
+      .catch(function () { rota = null; })
+      .then(function () { rotaPronta = true; comecar(); });
+  }
 
   var OPACIDADE_SOBRE_TEXTO = 0.16;   // quanto a linha aparece por cima de um texto ou foto
   var TRANSICAO = 26;                 // em px: distância em que ela some e volta, ao cruzar
@@ -251,6 +265,62 @@
     return true;
   }
 
+  // ---------------- computador: espinha a partir do percurso da v1 ----------------
+
+  function espinhaDaRota() {
+    var ref = rota.ref, n = ref.length, B = L.B;
+    if (B.length !== n) B = ref.map(function (v) { return v * L.H / ref[n - 1]; });
+    var fios = rota.strands.map(function (st) {
+      var pts = [];
+      for (var q = 0; q < st.length; q += 5) {
+        var s = Math.min(st[q + 1], n - 2), f = st[q + 2] / 10000;
+        pts.push({ x: st[q] - 720 + L.W / 2, y: B[s] + f * (B[s + 1] - B[s]) });
+      }
+      return pts;
+    });
+    // pequenos desvios próprios desta visita, iguais para todos os fios na mesma
+    // altura (assim os lagos continuam presos à linha)
+    var fa = acaso() * 10, fb = acaso() * 10, amp = 10 + acaso() * 14;
+    var desvio = function (y) { return amp * (Math.sin(y / 430 + fa) * 0.65 + Math.sin(y / 170 + fb) * 0.35); };
+
+    // pontos de controle a cada ~150 px ao longo da espinha
+    var principal = fios[0], novos = [], acum = 0;
+    novos.push({ x: principal[0].x + desvio(principal[0].y), y: principal[0].y });
+    for (var i = 1; i < principal.length; i++) {
+      acum += Math.hypot(principal[i].x - principal[i - 1].x, principal[i].y - principal[i - 1].y);
+      if (acum >= 150 || i === principal.length - 1) {
+        novos.push({ x: principal[i].x + desvio(principal[i].y), y: principal[i].y });
+        acum = 0;
+      }
+    }
+    var u = novos[novos.length - 1];
+    u.x = u.x > L.W / 2 ? L.W + 60 : -60; u.y = Math.max(u.y, L.H + 120); u.fim = true;
+    novos.forEach(function (p) { p.rel = paraRel(p.x, p.y); });
+
+    // os lagos da v1 viram lagos sobre os trechos entre os pontos mais próximos
+    var lagosV1 = [];
+    fios.slice(1).forEach(function (lago) {
+      var perto = function (p) {
+        var m = 0, dm = Infinity;
+        for (var k = 0; k < novos.length; k++) { var d = Math.hypot(novos[k].x - p.x, novos[k].y - p.y); if (d < dm) { dm = d; m = k; } }
+        return m;
+      };
+      var de = perto(lago[0]), ate = perto(lago[lago.length - 1]);
+      if (ate <= de) ate = de + 1;
+      var meio = lago[Math.floor(lago.length / 2)], larg = 0;
+      lago.forEach(function (p) {
+        var dm = Infinity;
+        principal.forEach(function (q) { var d = Math.hypot(q.x - p.x, q.y - p.y); if (d < dm) dm = d; });
+        if (dm > larg) larg = dm;
+      });
+      // de que lado do principal o lago fica
+      var a = novos[de], b = novos[ate];
+      var lado = ((b.x - a.x) * (meio.y - a.y) - (b.y - a.y) * (meio.x - a.x)) > 0 ? -1 : 1;
+      lagosV1.push({ de: de, ate: ate, bojo: Math.max(18, Math.min(80, larg)), lado: lado });
+    });
+    return { pcs: novos, lagos: lagosV1 };
+  }
+
   // ---------------- leitura da pessoa ----------------
 
   var velocidade = 0, ultimoScroll = window.scrollY, ultimoTempo = performance.now(), parouEm = performance.now(), pausaUsada = true;
@@ -290,7 +360,7 @@
     if (kAtual >= sg.n) {
       segAtual++; kAtual = 0;
       if (segAtual >= PCs.length - 1) { terminado = true; return false; }
-      if (acaso() < 0.25) criarLago(segAtual + 1);   // lagos que nascem sozinhos
+      if (acaso() < (L.larga && rota ? 0.08 : 0.25)) criarLago(segAtual + 1);   // lagos que nascem sozinhos
       return true;
     }
     var a = sg.pts[kAtual], b = sg.pts[kAtual + 1];
@@ -355,11 +425,17 @@
     svg.setAttribute('viewBox', '0 0 ' + Math.round(L.W) + ' ' + Math.round(L.H));
     svg.setAttribute('preserveAspectRatio', 'none');
     principal = novoFio();
-    var ivs = intervalosLivres(120, 80);
-    var iv = ivs.length ? (acaso() < 0.5 ? ivs[0] : ivs[ivs.length - 1]) : [10, 40];
-    var x0 = iv[0] + Math.min(L.larga ? 70 : 10, (iv[1] - iv[0]) / 2);
-    PCs = [{ x: x0, y: -40 }];
-    PCs[0].rel = paraRel(x0, -40);
+    if (L.larga && rota) {
+      var esp = espinhaDaRota();
+      PCs = esp.pcs;
+      esp.lagos.forEach(function (l) { l.fio = novoFio(); lagos.push(l); });
+    } else {
+      var ivs = intervalosLivres(120, 80);
+      var iv = ivs.length ? (acaso() < 0.5 ? ivs[0] : ivs[ivs.length - 1]) : [10, 40];
+      var x0 = iv[0] + Math.min(L.larga ? 70 : 10, (iv[1] - iv[0]) / 2);
+      PCs = [{ x: x0, y: -40 }];
+      PCs[0].rel = paraRel(x0, -40);
+    }
     if (semMovimento) {
       velocidade = 600;
       var guarda = 0;
@@ -414,7 +490,7 @@
   }
 
   function comecar() {
-    if (L) return;
+    if (L || !rotaPronta) return;
     iniciar();
     if (window.ResizeObserver) new ResizeObserver(agendarRemontagem).observe(pagina);
     pagina.addEventListener('toggle', agendarRemontagem, true);

@@ -5,7 +5,7 @@ Site de uma página só, em HTML, CSS e um pouco de JavaScript. Não usa framewo
 ## Versões
 
 - `/` — versão atual.
-- `/v2/` — proposta minimalista: uma fonte só (Inter Tight), fundo claro e frio, sem cartões nem botões cheios, navegação com só o nome e "Agendar". O vermelho aparece só na linha, desenhada ao vivo pelo `js/linha-viva.js`: uma curva longa e suave por pontos sorteados a cada visita, com um só começo e um só fim e ramificações apenas em lagos. A ponta aparece na tela, com um pingo de tinta, desenhando no ritmo de uma mão. A linha não desvia dos textos: ao cruzar um texto ou foto, fica quase transparente e mais fina, com transição suave. Ler devagar engrossa o traço, uma pausa abre um lago e, no computador, o mouse influencia o caminho. Não aparece no Google (`noindex`).
+- `/v2/` — proposta minimalista: uma fonte só (Inter Tight), fundo claro e frio, sem cartões nem botões cheios, navegação com só o nome e "Agendar". O vermelho aparece só na linha, desenhada ao vivo pelo `js/linha-viva.js`, com a ponta à vista e um pingo de tinta. No computador, a espinha é o percurso desenhado à mão da versão atual (com os mesmos lagos), e cada visita ganha pequenos desvios sorteados em volta dele. No celular, a curva é sorteada a cada visita. Em ambos: um só começo e um só fim, ramificações só em lagos, linha atenuada (transparente e mais fina) ao cruzar textos e fotos, traço mais grosso quando a leitura é lenta e um lago a mais quando a pessoa faz uma pausa. Não aparece no Google (`noindex`).
 
 ## Estrutura
 
