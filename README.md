@@ -2,6 +2,11 @@
 
 Site de uma página só, em HTML, CSS e um pouco de JavaScript. Não usa framework nem etapa de "build" e não precisa de servidor: basta publicar os arquivos como estão.
 
+## Versões
+
+- `/` — versão atual.
+- `/v2/` — proposta minimalista: uma fonte só (Inter Tight), fundo claro e frio, sem cartões nem botões cheios, navegação com só o nome e "Agendar". O vermelho aparece só na linha, que corre por corredores (margens e o vão entre colunas) e se abre em lagos nas travessias. Usa as mesmas fotos, fontes e o mesmo `js/linha.js`. Não aparece no Google (`noindex`).
+
 ## Estrutura
 
 ```

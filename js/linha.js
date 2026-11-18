@@ -27,6 +27,14 @@
 (function () {
   'use strict';
 
+  // Opções (atributos no elemento #pagina):
+  //   data-rota="caminho/rota.json"   onde está o percurso (padrão: dados/rota-linha.json)
+  //   data-fixos="nao"                desvia de todos os textos, inclusive nos trechos desenhados à mão
+  //   data-imagens="desviar"          também desvia das fotos
+  //   data-espessura="1.3"            multiplica a espessura do traço
+  //   data-percurso="corredores"      no computador, usa corredores em vez do percurso desenhado
+  //   data-lados="E,E,C,..."          corredor de cada seção no computador (E, C ou D)
+  //   data-lagos="0,2"                travessias em que a linha se abre num lago
   var ROTA_URL = 'dados/rota-linha.json';
   var SVG_NS = 'http://www.w3.org/2000/svg';
   var LARGURA_MINIMA_ROTA = 1000;     // abaixo disso, usa o percurso pelas margens
@@ -35,6 +43,13 @@
 
   var pagina = document.getElementById('pagina');
   if (!pagina) return;
+  if (pagina.dataset.rota) ROTA_URL = pagina.dataset.rota;
+  var IGNORAR_FIXOS = pagina.dataset.fixos === 'nao';
+  var DESVIAR_IMAGENS = pagina.dataset.imagens === 'desviar';
+  var ESPESSURA = parseFloat(pagina.dataset.espessura) || 1;
+  var CORREDORES = pagina.dataset.percurso === 'corredores';
+  var LADOS_COMPUTADOR = (pagina.dataset.lados || 'E,E,C,C,C,D,D,D,D').split(',');
+  var LAGOS_COMPUTADOR = (pagina.dataset.lagos || '0,2').split(',').map(Number);
   var camadas = pagina.querySelectorAll('svg.rio');
   if (!camadas.length) return;
 
@@ -61,7 +76,7 @@
   function obstaculos(base, escala, folga) {
     var lista = [];
     var faixa = document.createRange();
-    var seletor = 'h1,h2,h3,p,li:not(.passo),summary,figcaption,a,span';
+    var seletor = 'h1,h2,h3,p,li:not(.passo),summary,figcaption,a,span' + (DESVIAR_IMAGENS ? ',img' : '');
     var pais = 'h1,h2,h3,p,li:not(.passo),summary,figcaption,a';
     var els = pagina.querySelectorAll(seletor);
     for (var i = 0; i < els.length; i++) {
@@ -69,7 +84,7 @@
       if (el.parentElement && el.parentElement.closest(pais)) continue;
       if (el.closest('svg') || el.classList.contains('pular')) continue;
       var r;
-      if (el.tagName === 'A') {
+      if (el.tagName === 'A' || el.tagName === 'IMG') {
         r = el.getBoundingClientRect();
       } else {
         faixa.selectNodeContents(el);
@@ -105,10 +120,28 @@
   // ================= desvio em volta dos textos =================
 
   function desviar(pts, obs) {
-    var n = pts.length, RAMPA = 10;
+    empurrar(pts, obs, 24, 4);
+    suavizar(pts, 8);
+    empurrar(pts, obs, 14, 2);   // garante que a suavização não devolveu a linha para cima de um texto
+    suavizar(pts, 3);
+  }
+
+  function suavizar(pts, vezes) {
+    var n = pts.length;
+    for (var it = 0; it < vezes; it++) {
+      for (var c = 1; c < n - 1; c++) {
+        if (pts[c][3]) continue;
+        pts[c][0] = (pts[c - 1][0] + 2 * pts[c][0] + pts[c + 1][0]) / 4;
+        pts[c][1] = (pts[c - 1][1] + 2 * pts[c][1] + pts[c + 1][1]) / 4;
+      }
+    }
+  }
+
+  function empurrar(pts, obs, RAMPA, passadas) {
+    var n = pts.length;
     function dentro(p, o) { return p[0] > o[0] && p[0] < o[2] && p[1] > o[1] && p[1] < o[3]; }
 
-    for (var passada = 0; passada < 4; passada++) {
+    for (var passada = 0; passada < passadas; passada++) {
       for (var q = 0; q < obs.length; q++) {
         var o = obs[q], i = 0;
         while (i < n) {
@@ -146,13 +179,6 @@
         }
       }
     }
-    for (var it = 0; it < 2; it++) {
-      for (var c = 1; c < n - 1; c++) {
-        if (pts[c][3]) continue;
-        pts[c][0] = (pts[c - 1][0] + 2 * pts[c][0] + pts[c + 1][0]) / 4;
-        pts[c][1] = (pts[c - 1][1] + 2 * pts[c][1] + pts[c + 1][1]) / 4;
-      }
-    }
   }
 
   // ================= percursos =================
@@ -165,86 +191,85 @@
       var pts = [];
       for (var j = 0; j < st.length; j += 5) {
         var s = Math.min(st[j + 1], n - 2), f = st[j + 2] / 10000;
-        pts.push([st[j] - 720 + W / 2, B[s] + f * (B[s + 1] - B[s]), st[j + 3], st[j + 4]]);
+        pts.push([st[j] - 720 + W / 2, B[s] + f * (B[s + 1] - B[s]), st[j + 3], IGNORAR_FIXOS ? 0 : st[j + 4]]);
       }
       return pts;
     });
   }
 
-  // Celular: pelas margens, trocando de lado nos respiros entre seções
-  function percursoMargens(W, H, B, obs, margem) {
-    var xE = Math.max(5, margem * 0.42), xD = W - xE;
-    var ladoX = function (lado) { return lado === 'D' ? xD : xE; };
+  // Corredores: a linha desce por faixas livres (margens ou o vão entre colunas)
+  // e troca de faixa nos respiros entre as seções. Usado no celular e, quando a
+  // página pede (data-percurso="corredores"), também no computador.
+  //   posX(lado)  -> x de cada faixa ('E' esquerda, 'C' centro, 'D' direita)
+  //   lados       -> uma faixa por seção
+  //   amp         -> quanto a linha balança dentro da faixa
+  //   comLago     -> em quais travessias (contando de 0) ela se abre num lago
+  function percursoCorredores(W, H, B, obs, posX, lados, amp, comLago, espMin, espMax) {
     var nSec = B.length - 1;
-    var lados = [];
-    for (var s = 0; s < nSec; s++) lados.push(LADOS_CELULAR[Math.min(s, LADOS_CELULAR.length - 1)]);
+    var ladoDe = function (s) { return lados[Math.min(s, lados.length - 1)]; };
 
     // faixa livre de texto em volta de cada divisa entre seções
     function respiro(y) {
-      var cima = y - 140, baixo = y + 140;
+      var cima = y - 160, baixo = y + 160;
       for (var i = 0; i < obs.length; i++) {
         var o = obs[i];
         if (o[3] <= y && o[3] > cima) cima = o[3];
         if (o[1] >= y && o[1] < baixo) baixo = o[1];
       }
-      return [cima + 4, baixo - 4];
+      return [cima + 6, baixo - 6];
     }
 
     var principal = [], lagos = [];
-    var passo = 8, sem = 1.3, travessia = 0;
-    var y = -24, x = ladoX(lados[0]);
+    var passo = 8, travessia = 0;
+    var y = -24;
 
     function trilho(ate, lado) {
-      // desce pela margem com um leve balanço, sem encostar no texto
+      var x0 = posX(lado);
       for (; y < ate; y += passo) {
-        var bal = ruido(y / 140, sem) * Math.min(3, xE * 0.3);
-        principal.push([ladoX(lado) + (lado === 'D' ? -bal : bal), y]);
+        principal.push([x0 + ruido(y / 170, 1.3 + travessia) * amp, y]);
       }
     }
 
-    function curva(x0, y0, x1, y1, desvioY) {
+    function curva(x0, y0, x1, y1, bojo) {
       var pts = [], dist = Math.hypot(x1 - x0, y1 - y0), n = Math.max(12, Math.round(dist / passo));
       for (var k = 0; k <= n; k++) {
         var t = k / n, e = t * t * (3 - 2 * t);
-        pts.push([x0 + (x1 - x0) * e, y0 + (y1 - y0) * t + Math.sin(Math.PI * t) * (desvioY || 0)]);
+        pts.push([x0 + (x1 - x0) * e, y0 + (y1 - y0) * t + Math.sin(Math.PI * t) * (bojo || 0)]);
       }
       return pts;
     }
 
-    for (var s2 = 0; s2 < nSec; s2++) {
-      var lado = lados[s2], prox = lados[s2 + 1];
-      var fim = B[s2 + 1];
-      if (s2 === nSec - 1) {
+    for (var s = 0; s < nSec; s++) {
+      var lado = ladoDe(s), prox = ladoDe(s + 1), fim = B[s + 1];
+      if (s === nSec - 1) {
         trilho(fim - 60, lado);
-        curva(ladoX(lado), y, W + 30, H + 30).forEach(function (p) { principal.push(p); });
+        var ult = principal[principal.length - 1];
+        principal = principal.concat(curva(ult[0], y, W + 30, H + 30));
         break;
       }
       if (prox === lado) { trilho(fim, lado); continue; }
-      var faixa = respiro(fim);
-      var y0 = faixa[0], y1 = faixa[1];
+      var faixa = respiro(fim), y0 = faixa[0], y1 = faixa[1];
       if (y1 - y0 < 40) { y0 = fim - 30; y1 = fim + 30; }
       trilho(y0, lado);
-      var xa = ladoX(lado), xb = ladoX(prox);
-      var cruza = curva(xa, y, xb, y1, 0);
-      if (travessia === LAGO_NA_TRAVESSIA && y1 - y0 > 70) {
-        // o lago: um segundo fio faz a mesma travessia um pouco mais abaixo e volta a se juntar
-        var meio = Math.min(28, (y1 - y0) * 0.3);
-        var curvaB = curva(xa, y, xb, y1, meio);
-        principal = principal.concat(curva(xa, y, xb, y1, -meio * 0.6));
-        lagos.push(curvaB);
+      var xa = principal.length ? principal[principal.length - 1][0] : posX(lado), xb = posX(prox);
+      if (comLago.indexOf(travessia) >= 0 && y1 - y0 > 70) {
+        // o lago: dois fios fazem a travessia, um mais acima e outro mais abaixo, e se juntam
+        var bojo = Math.min(40, (y1 - y0) * 0.3);
+        principal = principal.concat(curva(xa, y, xb, y1, -bojo * 0.6));
+        lagos.push(curva(xa, y, xb, y1, bojo));
       } else {
-        principal = principal.concat(cruza);
+        principal = principal.concat(curva(xa, y, xb, y1, 0));
       }
       y = y1;
       travessia++;
     }
 
-    function comEspessura(pts, min, max, sem2, ai, af) {
-      return pts.map(function (p, i) { return [p[0], p[1], espessura(i, pts.length, min, max, sem2, ai, af), 0]; });
+    function comEspessura(pts, min, max, sem, ai, af) {
+      return pts.map(function (p, i) { return [p[0], p[1], espessura(i, pts.length, min, max, sem, ai, af), 0]; });
     }
-    var fiosM = [comEspessura(principal, 0.6, 2.4, 0.4, true, false)];
-    lagos.forEach(function (l, i) { fiosM.push(comEspessura(l, 0.4, 1.6, 2 + i, true, true)); });
-    return fiosM;
+    var resultado = [comEspessura(principal, espMin, espMax, 0.4, true, false)];
+    lagos.forEach(function (l, i) { resultado.push(comEspessura(l, espMin * 0.7, espMax * 0.65, 2 + i, true, true)); });
+    return resultado;
   }
 
   // ================= desenho =================
@@ -273,9 +298,9 @@
       for (var cc = 0; cc < camadas.length; cc++) frags.push(document.createDocumentFragment());
       var k = 0;
       while (k < pts.length - 1) {
-        var w = Math.round(pts[k][2] / 2.5) * 0.25, f = k;
+        var w = Math.round(pts[k][2] * ESPESSURA / 2.5) * 0.25, f = k;
         var d = 'M' + pts[k][0].toFixed(1) + ' ' + pts[k][1].toFixed(1);
-        while (f < pts.length - 1 && f - k < 16 && Math.round(pts[f][2] / 2.5) * 0.25 === w) {
+        while (f < pts.length - 1 && f - k < 16 && Math.round(pts[f][2] * ESPESSURA / 2.5) * 0.25 === w) {
           f++;
           d += ' L' + pts[f][0].toFixed(1) + ' ' + pts[f][1].toFixed(1);
         }
@@ -380,7 +405,7 @@
     var escala = pagina.offsetWidth / base.width;
     var W = pagina.offsetWidth, H = pagina.offsetHeight;
     var larga = W >= LARGURA_MINIMA_ROTA;
-    if (larga && !rota) return;           // espera a rota carregar
+    if (larga && !CORREDORES && !rota) return;   // espera a rota carregar
 
     var folga = larga ? 12 : 6;
     var obs = obstaculos(base, escala, folga);
@@ -393,12 +418,23 @@
     ultimaChave = chave;
 
     var percursos;
-    if (larga) {
+    var cont = pagina.querySelector('.container');
+    if (larga && !CORREDORES) {
       percursos = percursoDesenhado(W, H, B);
+    } else if (larga) {
+      // computador, por corredores: margens de fora e o vão entre as colunas
+      var rc = cont.getBoundingClientRect();
+      var pad = parseFloat(getComputedStyle(cont).paddingLeft) || 0;
+      var margemFora = (rc.left - base.left) * escala + pad;          // até onde começa o texto
+      var colunaConteudo = pagina.querySelector('.conteudo');
+      var xCentro = colunaConteudo ? (colunaConteudo.getBoundingClientRect().left - base.left) * escala - 32 : W / 2;
+      var posL = function (lado) { return lado === 'D' ? W - margemFora * 0.55 : lado === 'C' ? xCentro : margemFora * 0.55; };
+      percursos = percursoCorredores(W, H, B, obs, posL, LADOS_COMPUTADOR, Math.min(14, margemFora * 0.12), LAGOS_COMPUTADOR, 0.8, 3.2);
     } else {
-      var cont = pagina.querySelector('.container');
       var margem = cont ? parseFloat(getComputedStyle(cont).paddingLeft) || 20 : 20;
-      percursos = percursoMargens(W, H, B, obs, margem);
+      var xE = Math.max(5, margem * 0.42);
+      var posM = function (lado) { return lado === 'D' ? W - xE : xE; };
+      percursos = percursoCorredores(W, H, B, obs, posM, LADOS_CELULAR, Math.min(3, xE * 0.3), [LAGO_NA_TRAVESSIA], 0.6, 2.4);
     }
     montar(W, H, percursos, obs);
     atualizarAlvo();
