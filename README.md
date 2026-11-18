@@ -20,24 +20,15 @@ fontes/                fontes hospedadas no próprio site (sem Google Fonts)
 v1/                    primeira versão, para referência
 ```
 
-## Antes de publicar de verdade: trocar os campos entre colchetes
+## Antes de publicar de verdade
 
-Procure no `index.html` (Ctrl+F) e substitua:
+Já preenchidos: WhatsApp, Instagram, CRP, formação, endereço e textos. Falta só:
 
-| Procure | Troque por |
+| Procure no `index.html` | Troque por |
 |---|---|
-| `55XXXXXXXXXXX` | WhatsApp com DDI e DDD, só números. Ex.: `5531999998888` (aparece 3 vezes) |
-| `query=Ouro+Preto%2C+Belo+Horizonte+MG` | o endereço do consultório, para o link "Ver no mapa" |
-| `[NÚMERO]` | número do CRP (aparece 3 vezes) |
-| `[usuario]` | usuário do Instagram |
-| `[Endereço completo]` | endereço do consultório |
-| `[Instituição]`, `[ano]`, `[Outras especializações ou cursos]` | formação |
-| `[Rascunho: …]` | o parágrafo do "Sobre mim" na voz da Mila |
-| `[50]` | duração da sessão |
-| `[Confirmar]` | apagar depois de confirmar a resposta sobre convênio |
-| `https://SEU-DOMINIO/` | o domínio definitivo |
+| `https://SEU-DOMINIO/` | o domínio definitivo, quando existir |
 
-A mensagem que já vem escrita no WhatsApp está no próprio link, depois de `?text=`. Para mudar o texto, gere um link novo em https://wa.me/ ou troque os espaços por `%20`.
+O link do WhatsApp é o link de mensagem da conta da Mila (`api.whatsapp.com/message/...`); a mensagem inicial é configurada no próprio WhatsApp Business. Ele aparece 3 vezes no `index.html`.
 
 ## Editar textos
 

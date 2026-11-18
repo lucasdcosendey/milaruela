@@ -11,6 +11,13 @@
   font-style: normal;
   font-display: swap;
 }
+@font-face {
+  font-family: "Inter Tight";
+  src: url("../fontes/inter-tight-italico.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
 
 :root {
   --fundo: #FAFAF9;
@@ -120,6 +127,13 @@ a:focus-visible, summary:focus-visible { outline: 1.5px solid var(--texto); outl
   .abertura .container { grid-template-columns: minmax(0, 1fr); padding-top: 40px; padding-bottom: 56px; }
   .abertura__foto { justify-self: start; max-width: 240px; }
 }
+
+/* ---------- citação ---------- */
+
+.citacao { margin: 16px 0 0; padding: 4px 0 4px 20px; border-left: 1px solid var(--fio); display: flex; flex-direction: column; gap: 10px; }
+.citacao p { font-size: 16px; line-height: 1.65; color: var(--texto); }
+.citacao em { font-style: italic; }
+.citacao footer { font-size: 13px; }
 
 /* ---------- listas ---------- */
 
