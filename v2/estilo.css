@@ -168,6 +168,13 @@ a:focus-visible, summary:focus-visible { outline: 1.5px solid var(--texto); outl
 
 .chamada .conteudo .grande { font-size: clamp(24px, 2.6vw, 30px); letter-spacing: -0.02em; }
 
+/* miniatura do desenho de cada visita */
+.miniatura { display: flex; align-items: flex-end; gap: 20px; margin-top: 28px; opacity: 0; transition: opacity 1.2s ease; }
+.miniatura.visivel { opacity: 1; }
+.miniatura svg { height: 168px; width: 56px; flex: none; overflow: visible; }
+.miniatura path { fill: none; stroke: var(--vermelho); stroke-width: 1; vector-effect: non-scaling-stroke; stroke-linecap: round; stroke-linejoin: round; }
+.miniatura figcaption { font-size: 14px; max-width: 320px; }
+
 /* ---------- rodapé ---------- */
 
 .rodape { font-size: 13px; color: var(--cinza); }
