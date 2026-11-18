@@ -180,6 +180,9 @@ a:focus-visible, summary:focus-visible { outline: 1.5px solid var(--texto); outl
 
 /* ---------- a linha ---------- */
 
-.rio { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; z-index: 1; }
+/* a linha fica por cima de tudo, como tinta no papel; sobre textos e fotos ela
+   mesma se atenua (js/linha-viva.js) */
+.rio { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; z-index: 3; mix-blend-mode: multiply; }
 .rio path { fill: none; stroke: var(--vermelho); stroke-linecap: round; stroke-linejoin: round; }
+.rio__pingo { fill: var(--vermelho); transition: opacity .6s ease; }
 @media print { .rio { display: none; } }
